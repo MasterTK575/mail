@@ -10,16 +10,23 @@ document.addEventListener('DOMContentLoaded', function() {
     event.preventDefault();
     submit_email();
   });
+  // buttons on the email view
+  document.querySelector('#back').addEventListener('click', () => load_mailbox('inbox'));
+  // TODO: add the other buttons
 
 
   // By default, load the inbox
   load_mailbox('inbox');
 });
 
+function mark_email() {
+  // TODO
+}
 function compose_email() {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
   // add highlight for current page on navbar
@@ -38,6 +45,7 @@ function load_mailbox(mailbox) {
   
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
+  document.querySelector('#email-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'none';
 
   // add highlight for current page on navbar
@@ -76,8 +84,18 @@ function load_mailbox(mailbox) {
         const email_subject = document.createElement('div');
         const email_timestamp = document.createElement('div');
 
+        // add stuff to them
         email_box.classList.add("d-flex", "list-group-item", "list-group-item-action");
         email_box.setAttribute("type", "button");
+        // load the email if the box gets clicked
+        email_box.addEventListener("click", () => load_email(element.id));
+        email_sender.innerHTML = element.sender;
+        email_sender.classList.add("mr-4");
+        email_subject.innerHTML = element.subject;
+        email_timestamp.innerHTML = element.timestamp;
+        email_timestamp.classList.add("ml-auto");
+
+        // differentiate between read and unread
         if(element.read === true) {
           email_box.style.backgroundColor = "#f5f5f5";
         } else {
@@ -86,12 +104,7 @@ function load_mailbox(mailbox) {
           email_subject.classList.add('font-weight-bold');
           email_timestamp.classList.add('font-weight-bold');
         }
-        // fill the parts of the email banner
-        email_sender.innerHTML = element.sender;
-        email_sender.classList.add("mr-4");
-        email_subject.innerHTML = element.subject;
-        email_timestamp.innerHTML = element.timestamp;
-        email_timestamp.classList.add("ml-auto");
+        
         // append all together
         email_box.appendChild(email_sender);
         email_box.appendChild(email_subject);
@@ -99,6 +112,37 @@ function load_mailbox(mailbox) {
         emails_view.appendChild(email_box);
       });
   });
+}
+
+function load_email(id) {
+  // Show the email and hide other views
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'block';
+  document.querySelector('#compose-view').style.display = 'none';
+  // remove navbar highlighting
+  document.querySelector('#compose').classList.remove("active");
+  document.querySelector('#inbox').classList.remove("active");
+  document.querySelector('#sent').classList.remove("active");
+  document.querySelector('#archived').classList.remove("active");
+  // get email contents via id and add them to the page
+  fetch(`/emails/${id}`)
+  .then(response => response.json())
+  .then(email => {
+      console.log(email)
+      // add email contents to page
+      document.querySelector('#from').innerHTML = email.sender;
+      document.querySelector('#to').innerHTML = email.recipients;
+      document.querySelector('#subject').innerHTML = email.subject;
+      document.querySelector('#timestamp').innerHTML = email.timestamp;
+      document.querySelector('#content').innerHTML = email.body;
+  });
+  // mark the email as read
+  fetch(`/emails/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+        read: true
+    })
+  })
 }
 
 function submit_email() {

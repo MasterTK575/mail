@@ -18,6 +18,20 @@
     <div id="emails-view" class="list-group">
     </div>
 
+    <div id="email-view">
+        <div class="font-weight-bold">From: <span class="font-weight-normal" id="from"></span></div>
+        <div class="font-weight-bold">To: <span class="font-weight-normal" id="to"></span></div>
+        <div class="font-weight-bold">Subject: <span class="font-weight-normal" id="subject"></span></div>
+        <div class="font-weight-bold">Timestamp: <span class="font-weight-normal" id="timestamp"></span></div>
+        <button class="btn btn-sm btn-outline-primary" id="reply">Reply</button>
+        <button class="btn btn-sm btn-outline-warning" id="archive">Archive</button>
+        <button class="btn btn-sm btn-outline-secondary" id="unread">Mark as unread</button>
+        <hr>
+        <div id="content">Content</div>
+        <hr>
+        <button class="btn btn-sm btn-outline-secondary" id="back">Back</button>
+    </div>
+
     <div id="compose-view">
         <h3>New Email</h3>
         <form id="compose-form">
