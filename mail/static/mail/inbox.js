@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // submit button to send an email
   document.querySelector('#compose-form').addEventListener('submit', event => {
     event.preventDefault();
-    console.log("Form submission prevented");
     submit_email();
   });
 
@@ -23,6 +22,12 @@ function compose_email() {
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
+  // add highlight for current page on navbar
+  document.querySelector('#compose').classList.add("active");
+  document.querySelector('#inbox').classList.remove("active");
+  document.querySelector('#sent').classList.remove("active");
+  document.querySelector('#archived').classList.remove("active");
+
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
@@ -35,6 +40,19 @@ function load_mailbox(mailbox) {
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
 
+  // add highlight for current page on navbar
+  document.querySelector('#compose').classList.remove("active");
+  document.querySelector('#inbox').classList.remove("active");
+  document.querySelector('#sent').classList.remove("active");
+  document.querySelector('#archived').classList.remove("active");
+  if(mailbox === "inbox") {
+    document.querySelector('#inbox').classList.add("active");
+  } else if(mailbox === "sent"){
+    document.querySelector('#sent').classList.add("active");
+  } else {
+    document.querySelector('#archived').classList.add("active");
+  }
+
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
   // get and show all mailbox emails
@@ -44,8 +62,6 @@ function load_mailbox(mailbox) {
       // Print emails
       console.log(emails);
       
-      
-      
       emails_view = document.querySelector('#emails-view')
       // if no emails yet
       if(emails.length === 0) {
@@ -54,14 +70,23 @@ function load_mailbox(mailbox) {
       }
       // else add emails to the emails-view
       emails.forEach(element => {
-        // create the container for the email banner
+        // create the the elements for the email banner
         const email_box = document.createElement('button');
-        email_box.classList.add("d-flex", "list-group-item", "list-group-item-action");
-        email_box.setAttribute("type", "button");
-        // create and fill the parts of the email banner
         const email_sender = document.createElement('div');
         const email_subject = document.createElement('div');
         const email_timestamp = document.createElement('div');
+
+        email_box.classList.add("d-flex", "list-group-item", "list-group-item-action");
+        email_box.setAttribute("type", "button");
+        if(element.read === true) {
+          email_box.style.backgroundColor = "#f5f5f5";
+        } else {
+          email_box.classList.add('border', 'border-secondary');
+          email_sender.classList.add('font-weight-bold');
+          email_subject.classList.add('font-weight-bold');
+          email_timestamp.classList.add('font-weight-bold');
+        }
+        // fill the parts of the email banner
         email_sender.innerHTML = element.sender;
         email_sender.classList.add("mr-4");
         email_subject.innerHTML = element.subject;
@@ -107,8 +132,9 @@ function showAlert(message, type) {
   alertDiv.classList.add(`alert-${type}`);
   alertDiv.innerHTML = message;
 
-  // hide alert after 10 seconds
+  // hide alert after 5 seconds
   setTimeout(() => {
     alertDiv.style.display = 'none';
+    alertDiv.classList.remove(`alert-${type}`);
   }, 5000);
 }
