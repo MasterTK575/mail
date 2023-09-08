@@ -80,6 +80,14 @@ function load_mailbox(mailbox) {
     document.querySelector('#archived').classList.add("active");
   }
 
+  // get count of unread mails for notification
+  fetch("/emails/inbox")
+  .then(response => response.json())
+  .then(emails => {
+    const unreadEmails = emails.filter(email => !email.read);
+    document.querySelector('#notification').innerHTML = unreadEmails.length;
+  });
+  
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
   // get and show all mailbox emails
