@@ -23,9 +23,11 @@
         <div class="font-weight-bold">To: <span class="font-weight-normal" id="to"></span></div>
         <div class="font-weight-bold">Subject: <span class="font-weight-normal" id="subject"></span></div>
         <div class="font-weight-bold">Timestamp: <span class="font-weight-normal" id="timestamp"></span></div>
-        <button class="btn btn-sm btn-outline-primary" id="reply">Reply</button>
-        <button class="btn btn-sm btn-outline-warning" id="archive">Archive</button>
-        <button class="btn btn-sm btn-outline-secondary" id="unread">Mark as unread</button>
+        <div id="email-buttons" class="d-flex">
+            <div id ="reply_button" style="display: none;"></div>
+            <div id ="archive_button" style="display: none;"></div>
+            <div id ="unread_button" style="display: none;"></div>
+        </div>
         <hr>
         <div id="content">Content</div>
         <hr>
@@ -51,5 +53,8 @@
 {% endblock %}
 
 {% block script %}
+    <script>
+        const CURRENT_USER_EMAIL = "{{ request.user.email }}";
+    </script>
     <script src="{% static 'mail/inbox.js' %}"></script>
 {% endblock %}

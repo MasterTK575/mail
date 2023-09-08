@@ -10,18 +10,14 @@ document.addEventListener('DOMContentLoaded', function() {
     event.preventDefault();
     submit_email();
   });
-  // buttons on the email view
+  // back button on the email view
   document.querySelector('#back').addEventListener('click', () => load_mailbox('inbox'));
-  // TODO: add the other buttons
 
 
   // By default, load the inbox
   load_mailbox('inbox');
 });
 
-function mark_email() {
-  // TODO
-}
 function compose_email() {
 
   // Show compose view and hide other views
@@ -39,6 +35,29 @@ function compose_email() {
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
+}
+
+function compose_reply(email) {
+  // Show compose view and hide other views
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#email-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'block';
+
+  // add highlight for current page on navbar
+  document.querySelector('#compose').classList.add("active");
+  document.querySelector('#inbox').classList.remove("active");
+  document.querySelector('#sent').classList.remove("active");
+  document.querySelector('#archived').classList.remove("active");
+
+  // pre-fill fields
+  document.querySelector('#compose-recipients').value = email.sender;
+  if(email.subject.startsWith("Re: ")) {
+    document.querySelector('#compose-subject').value = email.subject;
+  } else {
+    document.querySelector('#compose-subject').value = `Re: ${email.subject}`;
+  }
+  document.querySelector('#compose-body').value = `On ${email.timestamp} ${email.sender} wrote:\n"${email.body}"\n`;
+
 }
 
 function load_mailbox(mailbox) {
@@ -119,23 +138,16 @@ function load_email(id) {
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#email-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  // hide buttons by default
+  document.querySelector('#unread_button').style.display = 'none';
+  document.querySelector('#archive_button').style.display = 'none';
+  document.querySelector('#reply_button').style.display = 'none';
   // remove navbar highlighting
   document.querySelector('#compose').classList.remove("active");
   document.querySelector('#inbox').classList.remove("active");
   document.querySelector('#sent').classList.remove("active");
   document.querySelector('#archived').classList.remove("active");
-  // get email contents via id and add them to the page
-  fetch(`/emails/${id}`)
-  .then(response => response.json())
-  .then(email => {
-      console.log(email)
-      // add email contents to page
-      document.querySelector('#from').innerHTML = email.sender;
-      document.querySelector('#to').innerHTML = email.recipients;
-      document.querySelector('#subject').innerHTML = email.subject;
-      document.querySelector('#timestamp').innerHTML = email.timestamp;
-      document.querySelector('#content').innerHTML = email.body;
-  });
+
   // mark the email as read
   fetch(`/emails/${id}`, {
     method: 'PUT',
@@ -143,10 +155,86 @@ function load_email(id) {
         read: true
     })
   })
+
+  // get email contents via id and add them to the page
+  fetch(`/emails/${id}`)
+  .then(response => response.json())
+  .then(email => {
+      console.log(email);
+      // add email contents to page
+      document.querySelector('#from').innerHTML = email.sender;
+      document.querySelector('#to').innerHTML = email.recipients;
+      document.querySelector('#subject').innerHTML = email.subject;
+      document.querySelector('#timestamp').innerHTML = email.timestamp;
+      document.querySelector('#content').innerHTML = email.body;
+      // load buttons unless you sent the mail yourself
+      if (email.sender !== CURRENT_USER_EMAIL) {
+        load_buttons(id, email);
+      }
+  });
 }
 
+function load_buttons(id, email) {
+  // show buttons
+  document.querySelector('#unread_button').style.display = 'block';
+  document.querySelector('#archive_button').style.display = 'block';
+  document.querySelector('#reply_button').style.display = 'block';
+   // add unread button
+   document.querySelector('#unread_button').innerHTML =
+   '<button class="btn btn-sm btn-outline-secondary" id="unread">Mark as unread</button>';
+   document.querySelector('#unread').addEventListener('click', () => {
+     fetch(`/emails/${id}`, {
+       method: 'PUT',
+       body: JSON.stringify({
+           read: false
+       })
+     }).then(() => {   // Wait for the previous request to complete
+         showAlert("Email marked as unread.", 'success');
+         load_mailbox('inbox');
+     });
+   });
+
+   // add archive button
+   if(email.archived === false){
+      document.querySelector('#archive_button').innerHTML =
+      '<button class="btn btn-sm btn-outline-warning" id="archive">Archive</button>';
+      document.querySelector('#archive').addEventListener('click', () => {
+        fetch(`/emails/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+              archived: true
+          })
+        }).then(() => {   // Wait for the previous request to complete
+            showAlert("Email archived.", 'success');
+            load_mailbox('archive');
+        });
+      });
+   } else {
+      document.querySelector('#archive_button').innerHTML =
+      '<button class="btn btn-sm btn-outline-warning" id="archive">Unarchive</button>';
+      document.querySelector('#archive').addEventListener('click', () => {
+        fetch(`/emails/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+              archived: false
+          })
+        }).then(() => {   // Wait for the previous request to complete
+            showAlert("Email unarchived.", 'success');
+            load_mailbox('archive');
+        });
+      });
+   }
+   // add reply button
+   document.querySelector('#reply_button').innerHTML =
+      '<button class="btn btn-sm btn-outline-primary" id="reply">Reply</button>';
+      document.querySelector('#reply').addEventListener('click', () => {
+        compose_reply(email);
+      });
+
+}
+  
+
 function submit_email() {
-  const alert = document.createElement('div');
   fetch('/emails', {
     method: 'POST',
     body: JSON.stringify({
